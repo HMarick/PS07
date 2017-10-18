@@ -52,11 +52,14 @@ colnames(test)[c(5,11)]=c("late1", "late2") #renaming the NumberOfTime60-89Days.
 ```
 
 
+In my exploration of this dataset, I examined various boxplots that indicated the relationship between quantitative variables and our classifier response variable. Below is the boxplot for Number of Times 30-59 Days Past Due, broken down by delinquency status. 
+
 ```{r}
 ggplot(train, aes(as.factor(SeriousDlqin2yrs), late1)) + geom_boxplot() + 
   xlab("Serious Delinquency in Last 2 Years") +
   ylab("Number of Times 30-59 Days Past Due")
 ```
+
 We see a bit of a relationship here between the Number of Times 30-59 Days Past Due and the likelihood of Delinquency, but there are some significant outliers. After removing the values on the upper portion of the boxplot, we have the following graph. 
 
 
@@ -65,9 +68,10 @@ ggplot(filter(train, late1<25), aes(as.factor(SeriousDlqin2yrs), late1)) + geom_
   xlab("Serious Delinquency in Last 2 Years") +
   ylab("Number of Times 30-59 Days Past Due")
 ```
+
 Even though the mean number of times late is similar for both categories, there is a significant right skew on the delinquency category. This indicates that the Number of Times 30-59 Days Past Due and the likelihood of delinquency.
 
-
+Before selecting this variable as my predictor of choice, I further investigated by looking at the rate of delinquency by the Number of Times 30-59 Days Past Due. 
 
 ```{r}
 proportions <- train %>% 
@@ -84,7 +88,8 @@ ggplot(proportions, aes(x=late1, y=prop)) +
   xlab("Number of Times 30-59 Days Past Due")
 
 ```
-Notice here that the majority of observations have an X value of 0. As we increase the X value, however, the rate of delinquency increases drastically. This is another indication that Number of Times 30-59 Days Past Due is a good predictor of delinquency. Below ,we have fit a logistic model with the above as our predictor.
+
+Notice here that the majority of observations have an X value of 0. As we increase the X value, however, the rate of delinquency increases drastically. This is another indication that Number of Times 30-59 Days Past Due is a good predictor of delinquency, even if the sample size is smaller for larger values of X. Below, we have fit a logistic model with the above as our predictor.
 
 ```{r}
 mod<-glm(SeriousDlqin2yrs~late1, data=train, family="binomial")
@@ -92,7 +97,7 @@ log_odds_hat <- predict(mod, newdata=test)
 p_hat <- 1/(1 + exp(-log_odds_hat))
 
 test$Probability=p_hat
-submission<-test[,c(1,13)]
+submission<-test[,c(1,13)] #selecting specific columns
 ```
 
 
