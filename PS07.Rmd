@@ -1,6 +1,6 @@
 ---
 title: "STAT/MATH 495: Problem Set 07"
-author: "WRITE YOUR NAME(S) HERE"
+author: "Harrison Marick"
 date: "2017-10-24"
 output:
   html_document:
@@ -38,6 +38,7 @@ Information on the competition can be found [here](https://www.kaggle.com/c/Give
 
 Please indicate who you collaborated with on this assignment: 
 
+I ride solo.
 
 
 # Build binary classifier
@@ -46,7 +47,52 @@ Build the binary classifier based on a single predictor variable: `DebtRatio`,
 `age`, or `MonthlyIncome`. Justify this choice.
 
 ```{r}
+colnames(train)[c(5,11)]=c("late1", "late2") #renaming the NumberOfTime30-59Days... column
+colnames(test)[c(5,11)]=c("late1", "late2") #renaming the NumberOfTime60-89Days... column
+```
 
+
+```{r}
+ggplot(train, aes(as.factor(SeriousDlqin2yrs), late1)) + geom_boxplot() + 
+  xlab("Serious Delinquency in Last 2 Years") +
+  ylab("Number of Times 30-59 Days Past Due")
+```
+We see a bit of a relationship here between the Number of Times 30-59 Days Past Due and the likelihood of Delinquency, but there are some significant outliers. After removing the values on the upper portion of the boxplot, we have the following graph. 
+
+
+```{r}
+ggplot(filter(train, late1<25), aes(as.factor(SeriousDlqin2yrs), late1)) + geom_boxplot() +
+  xlab("Serious Delinquency in Last 2 Years") +
+  ylab("Number of Times 30-59 Days Past Due")
+```
+Even though the mean number of times late is similar for both categories, there is a significant right skew on the delinquency category. This indicates that the Number of Times 30-59 Days Past Due and the likelihood of delinquency.
+
+
+
+```{r}
+proportions <- train %>% 
+  group_by(SeriousDlqin2yrs, late1) %>% 
+  summarise(n=n()) %>% 
+  # Create new grouping structure to compute proportions:
+  group_by(late1) %>% 
+  mutate(prop = n/sum(n)) %>% 
+  filter(SeriousDlqin2yrs==1)
+
+ggplot(proportions, aes(x=late1, y=prop)) +
+  geom_line() + geom_text(aes(label=n), size=5) +
+  ylab("Proportion of Serious Delinquency in Last 2 Years") +
+  xlab("Number of Times 30-59 Days Past Due")
+
+```
+Notice here that the majority of observations have an X value of 0. As we increase the X value, however, the rate of delinquency increases drastically. This is another indication that Number of Times 30-59 Days Past Due is a good predictor of delinquency. Below ,we have fit a logistic model with the above as our predictor.
+
+```{r}
+mod<-glm(SeriousDlqin2yrs~late1, data=train, family="binomial")
+log_odds_hat <- predict(mod, newdata=test)
+p_hat <- 1/(1 + exp(-log_odds_hat))
+
+test$Probability=p_hat
+submission<-test[,c(1,13)]
 ```
 
 
@@ -56,6 +102,21 @@ Build the binary classifier based on a single predictor variable: `DebtRatio`,
 Based on the ultimate classifier you choose, plot a corresponding ROC curve.
 
 ```{r}
+train_aug <- mod %>% 
+  broom::augment() %>% 
+  as_tibble() %>% 
+  mutate(p_hat = 1/(1+exp(-.fitted)))
+
+library(ROCR)
+# This bit of code computes the ROC curve
+pred <- prediction(predictions = train_aug$p_hat, labels = train_aug$SeriousDlqin2yrs)
+perf <- performance(pred, "tpr","fpr")
+
+# This bit of code computes the Area Under the Curve
+auc <- as.numeric(performance(pred,"auc")@y.values)
+auc
+
+plot(perf, main=paste("Area Under the Curve =", round(auc, 3)))
 
 ```
 
@@ -67,5 +128,13 @@ Instead of using any predictor information as you did above, switch your
 predictions to random guesses and plot the resulting ROC curve.
 
 ```{r}
+p_hat_random<-runif(length(train_aug$SeriousDlqin2yrs)) #draw from Unif(0,1) dist
+pred <- prediction(predictions = p_hat_random, labels = train_aug$SeriousDlqin2yrs)
+perf <- performance(pred, "tpr","fpr")
 
+# This bit of code computes the Area Under the Curve
+auc <- as.numeric(performance(pred,"auc")@y.values)
+auc
+
+plot(perf, main=paste("Area Under the Curve =", round(auc, 3)))
 ```
