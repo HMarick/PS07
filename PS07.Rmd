@@ -98,6 +98,7 @@ p_hat <- 1/(1 + exp(-log_odds_hat))
 
 test$Probability=p_hat
 submission<-test[,c(1,13)] #selecting specific columns
+write.csv(submission, "sub.csv", row.names = FALSE)
 ```
 
 
