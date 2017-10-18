@@ -265,7 +265,7 @@ p_hat &lt;- 1/(1 + exp(-log_odds_hat))
 
 test$Probability=p_hat
 submission&lt;-test[,c(1,13)] #selecting specific columns
-write.csv(submission, &quot;sub.csv&quot;, row.names = FALSE)</code></pre>
+write.csv(submission, &quot;submission.csv&quot;, row.names = FALSE)</code></pre>
 </div>
 <div id="roc-curve" class="section level1">
 <h1>ROC curve</h1>
