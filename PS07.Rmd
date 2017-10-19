@@ -60,7 +60,7 @@ ggplot(train, aes(as.factor(SeriousDlqin2yrs), age)) + geom_boxplot() +
   ylab("Age")
 ```
 
-Notice the mean age is much lower for the delinquency group, which makes sense as older people tend to be more financial well-off and more responsible than younger people. While this is a generalization, the data suggests there is truth to my intuition.
+Notice the mean age is much lower for the delinquency group, which makes sense as older people tend to be more financially well-off and more responsible than younger people. While this is a generalization, the data suggests there is truth to my intuition.
 
 Before selecting this variable as my predictor of choice, I further investigated by looking at the rate of delinquency by the Age. 
 
